@@ -94,6 +94,7 @@ struct net_device *loopback_init(void) {
   dev->hlen = 0; /* non header */
   dev->alen = 0; /* non address */
   dev->flags = NET_DEVICE_FLAG_LOOPBACK;
+  dev->ops = &loopback_ops;
 
   lo = memory_alloc(sizeof(*lo));
   if (!lo) {
