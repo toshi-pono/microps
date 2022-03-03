@@ -107,7 +107,7 @@ void net_shutdown(void) {
   struct net_device *dev;
   debugf("close all devices...");
   for (dev = devices; dev; dev = dev->next) {
-    net_devices_close(dev);
+    net_device_close(dev);
   }
   debugf("shutting down");
 }
