@@ -46,7 +46,7 @@ int intr_request_irq(unsigned int irq,
   entry->irq = irq;
   entry->handler = handler;
   entry->flags = flags;
-  strncpy(entry->name, name, sizeof(entry->name) - 1);  // ?
+  strncpy(entry->name, name, sizeof(entry->name) - 1);
   entry->dev = dev;
   entry->next = irqs;
   irqs = entry;
