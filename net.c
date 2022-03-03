@@ -143,7 +143,7 @@ int net_input_handler(uint16_t type, const uint8_t *data, size_t len,
       memcpy(entry->data, data, len);
       queue_push(&proto->queue, entry);
       debugf("queue pushed (num %u), dev=%s, type=0x%04x, len=%zu",
-             proto->queue.num, type, len);
+             proto->queue.num, dev->name, type, len);
       debugdump(data, len);
       return 0;
     }
