@@ -81,12 +81,14 @@ void icmp_input(const uint8_t *data, size_t len, ip_addr_t src, ip_addr_t dst,
   char addr1[IP_ADDR_STR_LEN];
   char addr2[IP_ADDR_STR_LEN];
 
+  hdr = (struct icmp_hdr *)data;
   if (len < ICMP_HDR_SIZE) {
     errorf("too short");
     return;
   }
-  if (cksum16(data, len, 0) != 0) {
-    errorf("checksum diffrent [cksum=0x%04x]", cksum16(data, len, 0));
+  if (cksum16((uint16_t *)data, len, 0) != 0) {
+    errorf("checksum diffrent [cksum=0x%04x]",
+           cksum16((uint16_t *)data, len, 0));
     return;
   }
 
