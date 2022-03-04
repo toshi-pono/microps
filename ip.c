@@ -115,8 +115,9 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
     errorf("too short");
     return;
   }
-  if (cksum16((uint16_t *)hdr, hlen, 0) != hdr->sum) {
-    errorf("checksum diffrent");
+  if (cksum16((uint16_t *)data, hlen, 0) != 0) {
+    errorf("checksum diffrent [cksum=0x%04x]",
+           cksum16((uint16_t *)data, hlen, 0));
     return;
   }
   offset = ntoh16(hdr->offset);
