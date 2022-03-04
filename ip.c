@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "net.h"
+#include "platform.h"
 #include "util.h"
 
 struct ip_hdr {
@@ -132,7 +133,7 @@ int ip_iface_register(struct net_device *dev, struct ip_iface *iface) {
   char addr2[IP_ADDR_STR_LEN];
   char addr3[IP_ADDR_STR_LEN];
 
-  if (net_device_add_iface(dev, iface) == -1) {
+  if (net_device_add_iface(dev, NET_IFACE(iface)) == -1) {
     return -1;
   }
 
@@ -140,7 +141,7 @@ int ip_iface_register(struct net_device *dev, struct ip_iface *iface) {
   ifaces = iface;
 
   infof("registered: dev=%s, unicast=%s, netmask=%s, broadcast=%s", dev->name,
-        ip_addrntop(iface->unicast, addr1, sizeof(addr1)),
+        ip_addr_ntop(iface->unicast, addr1, sizeof(addr1)),
         ip_addr_ntop(iface->netmask, addr2, sizeof(addr2)),
         ip_addr_ntop(iface->broadcast, addr3, sizeof(addr3)));
   return 0;
@@ -195,14 +196,18 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
     return;
   }
 
-  if (hdr->dst != IP_ADDR_BROADCAST) {
-    for (iface = dev->ifaces; iface; iface = iface->next) {
-      if (iface->unicast == hdr->dst) break;
-      if (iface->broadcast == hdr->dst) break;
+  for (iface = ifaces; iface; iface = iface->next) {
+    if (NET_IFACE(iface)->dev == dev) {
+      break;
     }
-    if (!iface) {
-      return;
-    }
+  }
+  if (iface == NULL) {
+    return;
+  }
+
+  if (hdr->dst != IP_ADDR_BROADCAST && hdr->dst != iface->broadcast &&
+      hdr->dst != iface->unicast) {
+    return;
   }
 
   debugf("dev=%s, iface=%s, protocol=%u, total=%u", dev->name,
