@@ -258,7 +258,7 @@ static ssize_t ip_output_core(struct ip_iface *iface, uint8_t protocol,
   hdr->protocol = protocol;
   hdr->sum = 0;
   hdr->src = hton32(src);
-  hdr->dst = hto32(dst);
+  hdr->dst = hton32(dst);
 
   hdr->sum = cksum16((uint16_t *)hdr, hlen, 0);
 
