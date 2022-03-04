@@ -107,7 +107,7 @@ struct net_iface *net_device_get_iface(struct net_device *dev, int family) {
       return entry;
     }
   }
-  return NULL
+  return NULL;
 }
 
 int net_device_output(struct net_device *dev, uint16_t type,

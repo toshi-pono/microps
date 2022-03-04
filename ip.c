@@ -93,17 +93,75 @@ static void ip_dump(const uint8_t *data, size_t len) {
   funlockfile(stderr);
 }
 
-struct ip_iface *ip_iface_alloc(const char *unicast, const char *netmask) {}
+struct ip_iface *ip_iface_alloc(const char *unicast, const char *netmask) {
+  struct ip_iface *iface;
+
+  iface = memory_alloc(sizeof(*iface));
+  if (!iface) {
+    errorf("memory_alloc() failure");
+    return NULL;
+  }
+  NET_IFACE(iface)->family = NET_IFACE_FAMILY_IP;
+
+  ip_addr_t unicast_num, netmask_num;
+  if (ip_addr_pton(unicast, &unicast_num) == -1) {
+    free(iface);
+    errorf("failure to convert unicast ip_addr [unicast=%s]", unicast);
+    return NULL;
+  }
+  iface->unicast = unicast_num;
+
+  if (ip_addr_pton(netmask, &netmask_num) == -1) {
+    free(iface);
+    errorf("failure to convert netmask ip_addr [netmask=%s]", netmask);
+    return NULL;
+  }
+  iface->netmask = netmask_num;
+
+  iface->broadcast = ((unicast_num & netmask_num) | ~netmask_num);
+
+  char bc[IP_ADDR_STR_LEN];
+  debugf("iface_broadcast: %s", ip_addr_ntop(iface->broadcast, bc, sizeof(bc)));
+
+  return iface;
+}
 
 /* NOTE: must notbe call after net_run() */
-int ip_iface_register(struct net_device *dev, struct ip_iface *iface) {}
+int ip_iface_register(struct net_device *dev, struct ip_iface *iface) {
+  char addr1[IP_ADDR_STR_LEN];
+  char addr2[IP_ADDR_STR_LEN];
+  char addr3[IP_ADDR_STR_LEN];
 
-struct ip_iface *ip_iface_select(ip_addr_t addr) {}
+  if (net_device_add_iface(dev, iface) == -1) {
+    return -1;
+  }
+
+  iface->next = ifaces;
+  ifaces = iface;
+
+  infof("registered: dev=%s, unicast=%s, netmask=%s, broadcast=%s", dev->name,
+        ip_addrntop(iface->unicast, addr1, sizeof(addr1)),
+        ip_addr_ntop(iface->netmask, addr2, sizeof(addr2)),
+        ip_addr_ntop(iface->broadcast, addr3, sizeof(addr3)));
+  return 0;
+}
+
+struct ip_iface *ip_iface_select(ip_addr_t addr) {
+  struct ip_iface *entry;
+  for (entry = ifaces; entry; entry = entry->next) {
+    if (entry->unicast == addr) {
+      return entry;
+    }
+  }
+  return NULL;
+}
 
 static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
   struct ip_hdr *hdr;
   uint8_t v;
   uint16_t hlen, total, offset;
+  struct ip_iface *iface;
+  char addr[IP_ADDR_STR_LEN];
 
   if (len < IP_HDR_SIZE_MIN) {
     errorf("too short");
@@ -136,7 +194,20 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
     errorf("fragments does not support");
     return;
   }
-  debugf("dev=%s, protocol=%u, total=%u", dev->name, hdr->protocol, total);
+
+  if (hdr->dst != IP_ADDR_BROADCAST) {
+    for (iface = dev->ifaces; iface; iface = iface->next) {
+      if (iface->unicast == hdr->dst) break;
+      if (iface->broadcast == hdr->dst) break;
+    }
+    if (!iface) {
+      return;
+    }
+  }
+
+  debugf("dev=%s, iface=%s, protocol=%u, total=%u", dev->name,
+         ip_addr_ntop(iface->unicast, addr, sizeof(addr)), hdr->protocol,
+         total);
   ip_dump(data, total);
 }
 
