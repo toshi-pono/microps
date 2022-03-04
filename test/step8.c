@@ -41,6 +41,7 @@ static int setup(void) {
     errorf("net_run() failure");
     return -1;
   }
+  return 0;
 }
 
 static void cleanup(void) { net_shutdown(); }
