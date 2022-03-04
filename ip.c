@@ -28,8 +28,8 @@ struct ip_hdr {
 struct ip_protocol {
   struct ip_protocol *next;
   uint8_t type;
-  void (*handler)(coonst uint8_t *data, size_t len, ip_addr_t src,
-                  ip_addr_t dst, struct ip_iface *iface);
+  void (*handler)(const uint8_t *data, size_t len, ip_addr_t src, ip_addr_t dst,
+                  struct ip_iface *iface);
 };
 
 const ip_addr_t IP_ADDR_ANY = 0x00000000;       /* 0.0.0.0 */
@@ -171,7 +171,28 @@ struct ip_iface *ip_iface_select(ip_addr_t addr) {
 int ip_protocol_register(uint8_t type,
                          void (*handler)(const uint8_t *data, size_t len,
                                          ip_addr_t src, ip_addr_t dst,
-                                         struct ip_iface *iface)) {}
+                                         struct ip_iface *iface)) {
+  struct ip_protocol *entry;
+  for (entry = protocols; entry; entry = entry->next) {
+    if (entry->type == type) {
+      errorf("already registered type=%u", type);
+      return -1;
+    }
+  }
+
+  entry = memory_alloc(sizeof(*entry));
+  if (!entry) {
+    errorf("memory_alloc() failure");
+    return -1;
+  }
+  entry->handler = handler;
+  entry->type = type;
+  entry->next = protocols;
+  protocols = entry->next;
+
+  infof("registered, type=%u", entry->type);
+  return 0;
+}
 
 static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
   struct ip_hdr *hdr;
@@ -179,6 +200,7 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
   uint16_t hlen, total, offset;
   struct ip_iface *iface;
   char addr[IP_ADDR_STR_LEN];
+  struct ip_protocol *protocol;
 
   if (len < IP_HDR_SIZE_MIN) {
     errorf("too short");
@@ -231,6 +253,14 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
          ip_addr_ntop(iface->unicast, addr, sizeof(addr)), hdr->protocol,
          total);
   ip_dump(data, total);
+
+  for (protocol = protocols; protocol; protocol = protocol->next) {
+    if (protocol->type == hdr->protocol) {
+      protocol->handler(data, len, hdr->src, hdr->dst, iface);
+      return;
+    }
+  }
+  /* unsupported protocol */
 }
 
 static int ip_output_device(struct ip_iface *iface, const uint8_t *data,
