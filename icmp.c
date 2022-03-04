@@ -127,7 +127,7 @@ int icmp_output(uint8_t type, uint8_t code, uint32_t values,
   hdr->sum = 0;
   hdr->values = values;
 
-  memcpy((uint8_t *)hdr + 1, data, len);
+  memcpy((uint8_t *)buf + ICMP_HDR_SIZE, data, len);
   msg_len = ICMP_HDR_SIZE + len;
 
   hdr->sum = cksum16((uint16_t *)buf, msg_len, 0);
