@@ -188,7 +188,7 @@ int ip_protocol_register(uint8_t type,
   entry->handler = handler;
   entry->type = type;
   entry->next = protocols;
-  protocols = entry->next;
+  protocols = entry;
 
   infof("registered, type=%u", entry->type);
   return 0;
