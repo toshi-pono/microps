@@ -126,7 +126,7 @@ static struct arp_cache *arp_cache_select(ip_addr_t pa) {
   struct arp_cache *entry;
   for (entry = caches; entry < tailof(caches); entry++) {
     if (entry->state == ARP_CACHE_STATE_FREE) continue;
-    if (entry->pa = pa) {
+    if (entry->pa == pa) {
       return entry;
     }
   }
@@ -162,7 +162,8 @@ static struct arp_cache *arp_cache_insert(ip_addr_t pa, const uint8_t *ha) {
     return NULL;
   }
   cache->state = ARP_CACHE_STATE_RESOLVED;
-
+  cache->pa = pa;
+  memcpy(cache->ha, ha, ETHER_ADDR_LEN);
   gettimeofday(&cache->timestamp, NULL);
 
   debugf("INSERT: pa=%s, ha=%s", ip_addr_ntop(pa, addr1, sizeof(addr1)),
@@ -205,7 +206,7 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha) {
   mutex_lock(&mutex);
   cache = arp_cache_select(pa);
   if (!cache) {
-    debugf("cache not found, pa=%s", ip_addrntop(pa, addr1, sizeof(addr1)));
+    debugf("cache not found, pa=%s", ip_addr_ntop(pa, addr1, sizeof(addr1)));
     mutex_unlock(&mutex);
     return ARP_RESOLVE_ERROR;
   }
