@@ -131,8 +131,9 @@ struct ip_iface *ip_iface_alloc(const char *unicast, const char *netmask) {
 
   iface->broadcast = ((unicast_num & netmask_num) | ~netmask_num);
 
-  char bc[IP_ADDR_STR_LEN];
-  debugf("iface_broadcast: %s", ip_addr_ntop(iface->broadcast, bc, sizeof(bc)));
+  // char bc[IP_ADDR_STR_LEN];
+  // debugf("iface_broadcast: %s", ip_addr_ntop(iface->broadcast, bc,
+  // sizeof(bc)));
 
   return iface;
 }
