@@ -20,6 +20,7 @@
 #define ARP_OP_REPLY 2
 
 #define ARP_CACHE_SIZE 32
+#define ARP_CACHE_TIMEOUT 30 /* seconds */
 
 #define ARP_CACHE_STATE_FREE 0
 #define ARP_CACHE_STATE_INCOMPLETE 1
@@ -249,6 +250,8 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha) {
          ether_addr_ntop(ha, addr2, sizeof(addr2)));
   return ARP_RESOLVE_FOUND;
 }
+
+static void arp_timer_handler(void) {}
 
 static void arp_input(const uint8_t *data, size_t len, struct net_device *dev) {
   struct arp_ether_ip *msg;

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "arp.h"
 #include "icmp.h"
@@ -24,10 +25,18 @@ struct net_protocol_queue_entry {
   uint8_t data[];
 };
 
+struct net_timer {
+  struct net_timer *next;
+  struct timeval interval;
+  struct timeval last;
+  void (*handler)(void);
+};
+
 /* NOTE: if you want to add/delete the entries after net_run(), you need to
  * protect these lists with a mutex . */
 static struct net_device *devices;
 static struct net_protocol *protocols;
+static struct net_timer *timers;
 
 struct net_device *net_device_alloc(void) {
   struct net_device *dev;
@@ -39,6 +48,11 @@ struct net_device *net_device_alloc(void) {
   }
   return dev;
 }
+
+/* NOTE: must not be call after net_run() */
+int net_timer_register(struct timeval interval, void (*handler)(void)) {}
+
+int net_timer_handler(void) {}
 
 /* NOTE: must not be call after net_run() */
 int net_device_register(struct net_device *dev) {
