@@ -111,7 +111,7 @@ static struct ip_route *ip_route_lookup(ip_addr_t dst) {
   for (route = routes; route; route = route->next) {
     if ((dst & route->netmask) == route->network) {
       if (!candidate || ntoh32(candidate->netmask) < ntoh32(route->netmask)) {
-        candidate = routes;
+        candidate = route;
       }
     }
   }
@@ -453,6 +453,8 @@ ssize_t ip_output(uint8_t protocol, const uint8_t *data, size_t len,
   struct ip_route *route;
   struct ip_iface *iface;
   char addr[IP_ADDR_STR_LEN];
+  char addr2[IP_ADDR_STR_LEN];
+
   ip_addr_t nexthop;
   uint16_t id;
 
@@ -467,8 +469,11 @@ ssize_t ip_output(uint8_t protocol, const uint8_t *data, size_t len,
   }
   iface = route->iface;
   if (src != IP_ADDR_ANY && src != iface->unicast) {
-    errorf("unable to output with specified source address, addr=%s",
-           ip_addr_ntop(src, addr, sizeof(addr)));
+    errorf(
+        "unable to output with specified source address, addr=%s, "
+        "iface->unicast=%s",
+        ip_addr_ntop(src, addr, sizeof(addr)),
+        ip_addr_ntop(iface->unicast, addr2, sizeof(addr2)));
     return -1;
   }
   nexthop = (route->nexthop != IP_ADDR_ANY) ? route->nexthop : dst;
