@@ -84,6 +84,10 @@ static struct ip_route *ip_route_add(ip_addr_t network, ip_addr_t netmask,
   char addr4[IP_ADDR_STR_LEN];
 
   route = memory_alloc(sizeof(*route));
+  if (!route) {
+    errorf("memory_alloc() failure");
+    return NULL;
+  }
   route->network = network & netmask;
   route->netmask = netmask;
   route->nexthop = nexthop;
@@ -225,7 +229,7 @@ int ip_iface_register(struct net_device *dev, struct ip_iface *iface) {
     return -1;
   }
 
-  if (ip_route_add(iface->unicast, iface->netmask, IP_ADDR_ANY, iface) == -1) {
+  if (!ip_route_add(iface->unicast, iface->netmask, IP_ADDR_ANY, iface)) {
     errorf("ip_route_add() failure");
     return -1;
   }

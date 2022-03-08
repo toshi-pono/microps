@@ -81,8 +81,6 @@ int main(int argc, char *argv[]) {
     errorf("setup() failure");
     return -1;
   }
-  ip_addr_pton("192.0.2.2", &src);
-  ip_addr_pton("192.0.2.1", &dst);
   id = getpid() % UINT16_MAX;
   while (!terminate) {
     if (icmp_output(ICMP_TYPE_ECHO, 0, hton32(id << 16 | ++seq),
