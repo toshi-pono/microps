@@ -377,7 +377,8 @@ static ssize_t ip_output_core(struct ip_iface *iface, uint8_t protocol,
   uint8_t buf[IP_TOTAL_SIZE_MAX];
   struct ip_hdr *hdr;
   uint16_t hlen, total;
-  char addr[IP_ADDR_STR_LEN];
+  char addr1[IP_ADDR_STR_LEN];
+  char addr2[IP_ADDR_STR_LEN];
 
   hdr = (struct ip_hdr *)buf;
 
@@ -398,8 +399,10 @@ static ssize_t ip_output_core(struct ip_iface *iface, uint8_t protocol,
 
   memcpy(&buf[hlen], data, len);
 
-  debugf("dev=%s, dst=%s, protocol=%u, len=%u", NET_IFACE(iface)->dev->name,
-         ip_addr_ntop(dst, addr, sizeof(addr)), protocol, total);
+  debugf("dev=%s, iface=%s, dst=%s, protocol=%u, len=%u",
+         NET_IFACE(iface)->dev->name,
+         ip_addr_ntop(iface->unicast, addr1, sizeof(addr1)),
+         ip_addr_ntop(dst, addr2, sizeof(addr2)), protocol, total);
   ip_dump(buf, total);
   return ip_output_device(iface, buf, total, nexthop);
 }
