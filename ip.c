@@ -467,7 +467,7 @@ ssize_t ip_output(uint8_t protocol, const uint8_t *data, size_t len,
   }
   iface = route->iface;
   if (src != IP_ADDR_ANY && src != iface->unicast) {
-    errorf("unable to ooutput with specified source address, addr=%s",
+    errorf("unable to output with specified source address, addr=%s",
            ip_addr_ntop(src, addr, sizeof(addr)));
     return -1;
   }
