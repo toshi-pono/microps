@@ -313,7 +313,7 @@ ssize_t udp_sendto(int id, uint8_t *data, size_t len,
     return -1;
   }
   local.addr = pcb->local.addr;
-  if (local.addr = IP_ADDR_ANY) {
+  if (local.addr == IP_ADDR_ANY) {
     iface = ip_route_get_iface(foreign->addr);
     if (!iface) {
       errorf("iface not found that can reach foreign address, addr=%s",
