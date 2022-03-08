@@ -64,7 +64,7 @@ static void udp_input(const uint8_t *data, size_t len, ip_addr_t src,
   pseudo.len = hton16(len);
   psum = ~cksum16((uint16_t *)&pseudo, sizeof(pseudo), 0);
   if (cksum16((uint16_t *)hdr, len, psum) != 0) {
-    errorf("checksum error: sum=%0x%04x, verify=0x%04x", ntoh16(hdr->sum),
+    errorf("checksum error: sum=0x%04x, verify=0x%04x", ntoh16(hdr->sum),
            ntoh16(cksum16((uint16_t *)hdr, len, -hdr->sum + psum)));
     return;
   }
@@ -89,23 +89,22 @@ ssize_t udp_output(struct ip_endpoint *src, struct ip_endpoint *dst,
     return -1;
   }
   hdr = (struct udp_hdr *)buf;
+  total = sizeof(*hdr) + len;
   // 疑似ヘッダ
   pseudo.src = src->addr;
   pseudo.dst = dst->addr;
   pseudo.zero = 0;
   pseudo.protocol = IP_PROTOCOL_UDP;
-  pseudo.len = hton16(len);
+  pseudo.len = hton16(total);
   psum = ~cksum16((uint16_t *)&pseudo, sizeof(pseudo), 0);
 
-  total = sizeof(*hdr) + len;
   hdr->len = hton16(total);
   hdr->src = src->port;
   hdr->dst = dst->port;
   hdr->sum = 0;
   memcpy(hdr + 1, data, len);
 
-  hdr->sum = cksum16((uint16_t *)hdr, len, psum);
-  hdr->sum = total;
+  hdr->sum = cksum16((uint16_t *)hdr, total, psum);
 
   debugf("%s => %s, len=%zu (payload=%zu)",
          ip_endpoint_ntop(src, ep1, sizeof(ep1)),
