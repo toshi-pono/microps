@@ -100,7 +100,7 @@ ssize_t udp_output(struct ip_endpoint *src, struct ip_endpoint *dst,
   total = sizeof(*hdr) + len;
   hdr->len = hton16(total);
   hdr->src = src->port;
-  hdr->dst = src->port;
+  hdr->dst = dst->port;
   hdr->sum = 0;
   memcpy(hdr + 1, data, len);
 
